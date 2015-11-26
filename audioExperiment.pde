@@ -11,7 +11,7 @@ BeatDetect beat;
 BeatListener beatListener;
 GridItem[][] grid;
 
-int cellSize, rows, cols;
+int cellSize, rows, cols, hoverRadius, circleSize;
 
 class BeatListener implements AudioListener {
 	private BeatDetect beat;
@@ -34,7 +34,8 @@ class BeatListener implements AudioListener {
 
 class GridItem {
 	// position of center
-	int posX, posY;
+	float posX, posY;
+  float originalPosX, originalPosY;
 
 	int size;
 	color clr = #ffffff;
@@ -42,21 +43,32 @@ class GridItem {
 	GridItem(int posX, int posY) {
 		this.posX = posX;
 		this.posY = posY;
+
+    originalPosX = posX;
+    originalPosY = posY;
 	}
 
-	int getPosX() {
+	float getPosX() {
 		return posX;
 	}
 
-	int getPosY() {
+	float getPosY() {
 		return posY;
 	}
 
-	void setPosX(int posX) {
+  float getOriginalPosX() {
+    return originalPosX;
+  }
+
+  float getOriginalPosY() {
+    return originalPosY;
+  }
+
+	void setPosX(float posX) {
 		this.posX = posX;
 	}
 
-	void setPosY(int posY) {
+	void setPosY(float posY) {
 		this.posY = posY;
 	}
 }
@@ -66,17 +78,21 @@ GridItem[][] gridInit() {
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
 			grid[i][j] = new GridItem(i * cellSize + cellSize / 2, j * cellSize + cellSize / 2);
-			print("x:", i * cellSize / 2, " ");
-			println("y:", j * cellSize / 2, " ");
+			// print("x:", i * cellSize / 2, " ");
+			// println("y:", j * cellSize / 2, " ");
 		}
 	}
 	return grid;
 }
 
 void gridDraw() {
+  float posX, posY;
+
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
-			point(grid[i][j].getPosX(), grid[i][j].getPosY());
+      posX = grid[i][j].getPosX();
+      posY = grid[i][j].getPosY();
+      ellipse(posX, posY, circleSize, circleSize);
 		}
 	}
 }
@@ -86,9 +102,12 @@ void setup() {
 	// fullScreen(P2D);
 	smooth(8);
 
-	cellSize = 32;
+	cellSize = 64;
 	rows = height / cellSize;
 	cols = width / cellSize;
+
+  hoverRadius = 120;
+  circleSize = 8;
 
 
 	minim = new Minim(this);
@@ -105,18 +124,41 @@ void setup() {
 	grid = gridInit();
 }
 
-void mouseDragged() {
+void mouseMoved() {
 	int x, y;
-	int posX, posY;
+	float posX, posY, newPosX, newPosY, originalPosX, originalPosY;
+  float angle, faderX, faderY;
 
   x = mouseX / cellSize;
   y = mouseY / cellSize;
 
-  posX = grid[x][y].getPosX() + int(random(-10, 10));
-  posY = grid[x][y].getPosY() + int(random(-10, 10));
+  originalPosX = grid[x][y].getOriginalPosX();
+  originalPosY = grid[x][y].getOriginalPosY();
 
-  grid[x][y].setPosX(posX);
-	grid[x][y].setPosY(posY);
+  faderX = ((float)(mouseX - originalPosX) / cellSize + 1);
+  faderY = ((float)(mouseY - originalPosY) / cellSize + 1);
+  println(faderX);
+
+  // float circleX = width/2 + cos(angle*i)*300;
+  // float circleY = height/2 + sin(angle*i)*300;
+
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      posX = grid[x][y].getPosX();
+      posY = grid[x][y].getPosY();
+
+      angle = atan2(posY, posX);
+
+      newPosX = posX + 20;
+      newPosY = posY + 20;
+
+      posX = lerp(newPosX, originalPosX, faderX);
+      posY = lerp(newPosY, originalPosY, faderY);
+
+      grid[x][y].setPosX(posX);
+      grid[x][y].setPosY(posY);
+    }
+  }
 }
 
 void draw() {
