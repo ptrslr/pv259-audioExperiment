@@ -137,7 +137,6 @@ void mouseMoved() {
 
     faderX = ((float)(mouseX - originalPosX) / cellSize + 1);
     faderY = ((float)(mouseY - originalPosY) / cellSize + 1);
-    println(faderX);
 
     // float circleX = width/2 + cos(angle*i)*300;
     // float circleY = height/2 + sin(angle*i)*300;
